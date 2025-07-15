@@ -1,4 +1,4 @@
-Sub AutomateDataEntry()
+Sub automatingrds()
     Dim driver As Object
     Dim ws As Worksheet
     Dim lastRow As Long
@@ -8,10 +8,8 @@ Sub AutomateDataEntry()
     Dim currentVagao As String
     Dim nextVagao As String
     Dim tipoFrete As String
-    
-    ' Inicializa o Selenium WebDriver
+
     Set driver = CreateObject("Selenium.WebDriver")
-    ' Inicializar o Chrome
     driver.Start "chrome"
     driver.Get "https://rdswebguaruja.la.cargill.com/"
     driver.Wait 500
@@ -20,28 +18,26 @@ Sub AutomateDataEntry()
     driver.FindElementByXPath("//span[@class='input-group-addon bl-none btn-xs liveListview-icon-caret-bt']").Click
     driver.Wait 1100
 
-    ' Logar no Rds
+    ' loga no rds
     driver.FindElementByXPath("//button[normalize-space()='Entrar']").Click
     driver.Wait 4000
     
         Do While True
-    ' Define a planilha e encontra a última linha com dados
     Set ws = ThisWorkbook.Sheets("RESUMO VLI")
-    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row  ' checa a placa do vagão na coluna a
     driver.Wait 300
     
-    ' Loop para preencher os dados
     For i = 2 To lastRow
         ' Verificar se a célula atual contém um novo vagão
         If ws.Cells(i, 1).Value <> "" Then
-            currentVagao = ws.Cells(i, 1).Value
+            currentVagao = ws.Cells(i, 1).Value        ' looping do processo principal
             nextVagao = ws.Cells(i + 1, 1).Value
     driver.Wait 500
     
-    ' Clica sobre a categoria de cadastros no RDS
+    ' clica sobre categoria de cadastros
     driver.FindElementByXPath("//img[@src='/images/menu/recepcao.png']").Click
     driver.Wait 1200
-    ' Clica no cadastro de Grãos
+    ' clica no cadastro de grãos
     driver.FindElementByXPath("//a[@id='menu_0000407']").Click
     driver.Wait 3500
             
@@ -339,17 +335,17 @@ End If
 End If
 End If
 
-' Finalizar a ficha
+' finalizar a ficha
 driver.FindElementByXPath("(//i[@class='fa fa-save'])[1]").Click
 driver.Wait 8000
 
-' Atualizar a página
+' atualizar a página
 driver.Refresh
 driver.Wait 4000
 
 End If
 Next i
-Loop
+Loop ' looping para o reinicio do processo principal
     
 ' Fechar o navegador
 driver.Quit
