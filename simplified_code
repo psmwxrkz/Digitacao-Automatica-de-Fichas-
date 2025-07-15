@@ -1,0 +1,215 @@
+Sub AutomateDataEntry()
+    Dim driver As Object
+    Dim ws As Worksheet
+    Dim lastRow As Long
+    Dim i As Long
+    Dim element As Object
+    Dim horarioChegada As String
+    Dim currentVagao As String
+    Dim nextVagao As String
+    Dim tipoFrete As String
+    
+    ' Inicializa o Selenium WebDriver
+    Set driver = CreateObject("Selenium.WebDriver")
+    ' Inicializar o Chrome
+    driver.Start "chrome"
+    driver.Get "https://rdswebguaruja.la.cargill.com/"
+    driver.Wait 500
+    driver.Refresh
+    driver.Wait 3500
+    driver.FindElementByXPath("//span[@class='input-group-addon bl-none btn-xs liveListview-icon-caret-bt']").Click
+    driver.Wait 1100
+
+    ' Logar no Rds
+    driver.FindElementByXPath("//button[normalize-space()='Entrar']").Click
+    driver.Wait 4000
+    
+        Do While True
+    ' Define a planilha e encontra a última linha com dados
+    Set ws = ThisWorkbook.Sheets("RESUMO VLI")
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    driver.Wait 300
+    
+    ' Loop para preencher os dados
+    For i = 2 To lastRow
+        ' Verificar se a célula atual contém um novo vagão
+        If ws.Cells(i, 1).Value <> "" Then
+            currentVagao = ws.Cells(i, 1).Value
+            nextVagao = ws.Cells(i + 1, 1).Value
+    driver.Wait 500
+    
+    ' Clica sobre a categoria de cadastros no RDS
+    driver.FindElementByXPath("//img[@src='/images/menu/recepcao.png']").Click
+    driver.Wait 1200
+    ' Clica no cadastro de Grãos
+    driver.FindElementByXPath("//a[@id='menu_0000407']").Click
+    driver.Wait 3500
+            
+            ' Coluna I "Operação"
+            driver.FindElementById("Filter_NomeOperacao").SendKeys ws.Cells(i, 9).Value
+            driver.Wait 2100
+            ' Clica na seta para inserir o tipo de modal
+            driver.FindElementByXPath("(//span[@class='input-group-addon bl-none btn-xs liveListview-icon-caret-bt'])[4]").Click
+            driver.Wait 1500
+            ' Seleciona a opção "VAGÃO"
+            driver.FindElementByXPath("(//td[normalize-space()='VAGÃO'])[1]").Click
+            Application.SendKeys "~"
+            driver.Wait 1600
+            ' Coluna A "Vagão"
+            driver.FindElementById("Filter.PlacaVeiculo").SendKeys ws.Cells(i, 1).Value
+            driver.Wait 3500
+            ' Clicar em INICIAR
+            driver.FindElementById("buttonStart").Click
+            driver.Wait 3800
+            ' Coluna B "Peso Bruto"
+            driver.FindElementById("Pesagem_PesoBrutoOrigemAux").SendKeys ws.Cells(i, 2).Value
+            driver.Wait 1500
+            ' Insere o CNPJ da ferrovia VLI
+            driver.FindElementById("liveListInterveniente_transportadora").SendKeys "00924429000175"
+            driver.Wait 6000
+            Application.SendKeys "~"
+            driver.Wait 1500
+            ' Verifica a operação para definir o tipo de frete FOBouCIF
+            If ws.Cells(i, 9).Value = "TRANSFERÊNCIA" Then
+                tipoFrete = "FOB"
+            ElseIf ws.Cells(i, 9).Value = "TRANSFERENCIA" Then
+                tipoFrete = "FOB"
+            ElseIf ws.Cells(i, 9).Value = "TERCEIROS" Then
+                tipoFrete = "CIF"
+            Else
+                tipoFrete = "" ' Caso não seja nenhum dos dois, pode deixar vazio ou definir outro valor
+            End If
+            ' Selecionar frete
+            If tipoFrete <> "" Then
+                driver.FindElementById("Veiculo_TipoFrete").SendKeys tipoFrete
+                driver.Wait 1000
+            End If
+            ' Seleciona o campo data chegada e limpa
+            driver.FindElementById("DataHoraChegadaAux").Click
+            ' Limpa o campo data chegada (CTRL + A e BACKSPACE)
+            Application.SendKeys "^a"
+            Application.SendKeys "{BACKSPACE}"
+            driver.Wait 1000
+            ' Insere o dado da coluna K "Data"
+            driver.FindElementById("DataHoraChegadaAux").SendKeys ws.Cells(i, 11).Value
+            driver.Wait 1000
+            ' Insere o dado da coluna L "Hora"
+            horarioChegada = ws.Cells(i, 12).Text
+            ' Digita cada caractere da coluna "Hora"
+            Dim j As Integer
+            For j = 1 To Len(horarioChegada)
+                driver.FindElementById("DataHoraChegadaAux").SendKeys Mid(horarioChegada, j, 1)
+            Next j
+            driver.Wait 2300
+            ' Imput da origem UBERABA (quando cadastrar origem, mudar o vba apenas para "SendKeys Enter")
+            driver.FindElementById("ListInterveniente0_OrigemNome").SendKeys "UBERABA"
+            driver.Wait 500
+            ' Coluna H "Fornecedor"
+            driver.FindElementById("ListInterveniente0_OrigemDocumentoNacional").SendKeys ws.Cells(i, 8).Value
+            driver.Wait 2000
+            ' Coluna J "CNPJ Destin"
+            driver.FindElementById("exportador0").SendKeys ws.Cells(i, 10).Value
+            driver.Wait 6000
+            Application.SendKeys "~"
+            driver.Wait 1650
+            ' Coluna G "Mercadoria"
+            driver.FindElementById("ListProduto0_2_").SendKeys ws.Cells(i, 7).Value
+            driver.Wait 1000
+            ' Coluna F "Chave NF" 'INSERT DA PPRIMEIRA NFe
+            driver.FindElementById("ListProduto0_2_ChaveAcesso").SendKeys ws.Cells(i, 6).Value
+            driver.Wait 1000
+            ' Inserir CFOP "6505"
+            driver.FindElementById("liveCFOP02").SendKeys "6505"
+            driver.Wait 1000
+            ' Coluna D "Data NFe"
+            driver.FindElementById("NotaFiscalOrigem[0].NotaFiscal[2].DataEmissaoAux").SendKeys ws.Cells(i, 4).Value
+            driver.Wait 1000
+            ' Coluna E "Rateio"
+            driver.FindElementByXPath("(//input[@name='NotaFiscalOrigem[0].NotaFiscal[2].QuantidadeAux'])[1]").SendKeys ws.Cells(i, 5).Value
+            driver.Wait 1000
+            ' Inserir unidade de medida
+            driver.FindElementById("UnidadeMedidaQuantidade0_2").SendKeys "KG"
+            driver.Wait 1300
+            ' Inserir valor unitário "2"
+            driver.FindElementByXPath("(//input[@name='NotaFiscalOrigem[0].NotaFiscal[2].ValorUnitarioAux'])[1]").SendKeys "2"
+            driver.Wait 1000
+            ' Valor total NF01
+            driver.FindElementByXPath("(//input[@name='NotaFiscalOrigem[0].NotaFiscal[2].ValorTotalAux'])[1]").SendKeys "5000" 'Insere o valor nf "5000"
+            driver.Wait 1200
+            ' Verifica a operação para inserir o cliente no campo "Dono Mercadoria"
+            If ws.Cells(i, 9).Value = "TRANSFERÊNCIA" Then
+                driver.FindElementByXPath("(//input[@id='DonoMercadoria0_2'])[1]").SendKeys "CGL"
+            ElseIf ws.Cells(i, 9).Value = "TRANSFERENCIA" Then
+                driver.FindElementByXPath("(//input[@id='DonoMercadoria0_2'])[1]").SendKeys "CGL"
+            ElseIf ws.Cells(i, 9).Value = "TERCEIROS" Then
+                driver.FindElementByXPath("(//input[@id='DonoMercadoria0_2'])[1]").SendKeys "LDC"
+            End If
+            driver.Wait 2300
+            Application.SendKeys "~"
+            driver.Wait 1000
+            
+Dim notaIndex As Integer
+Dim xpathPrefix As String, cfopId As String, donoId As String
+
+For notaIndex = 3 To 7
+    If ws.Cells(i + 1, 1).Value = currentVagao Then
+        i = i + 1
+        driver.FindElementById("addNotaFiscal_0").Click
+        driver.Wait 2700
+
+        xpathPrefix = "(//input[@id='ListProduto0_" & notaIndex & "_ChaveAcesso'])[1]"
+        driver.FindElementByXPath(xpathPrefix).SendKeys ws.Cells(i, 6).Value
+        driver.Wait 1500
+
+        cfopId = "liveCFOP0" & notaIndex
+        driver.FindElementById(cfopId).SendKeys "6505"
+        driver.Wait 1500
+
+        driver.FindElementByXPath("(//input[@id='NotaFiscalOrigem[0].NotaFiscal[" & notaIndex & "].DataEmissaoAux'])[1]").SendKeys ws.Cells(i, 4).Value
+        driver.Wait 1500
+
+        driver.FindElementByXPath("(//input[@name='NotaFiscalOrigem[0].NotaFiscal[" & notaIndex & "].QuantidadeAux'])[1]").SendKeys ws.Cells(i, 5).Value
+        driver.Wait 1500
+
+        driver.FindElementById("UnidadeMedidaQuantidade0_" & notaIndex).Clear
+        driver.Wait 500
+        driver.FindElementById("UnidadeMedidaQuantidade0_" & notaIndex).SendKeys "KG"
+        driver.Wait 1500
+
+        driver.FindElementByXPath("(//input[contains(@name,'NotaFiscalOrigem[0].NotaFiscal[" & notaIndex & "].ValorUnitarioAux')])[1]").SendKeys "2"
+        driver.Wait 1500
+
+        driver.FindElementByXPath("(//input[@name='NotaFiscalOrigem[0].NotaFiscal[" & notaIndex & "].ValorTotalAux'])[1]").SendKeys "5000"
+        driver.Wait 1500
+
+        If ws.Cells(i, 9).Value = "TRANSFERÊNCIA" Or ws.Cells(i, 9).Value = "TRANSFERENCIA" Then
+            donoId = "(//input[@id='DonoMercadoria0_" & notaIndex & "'])[1]"
+            driver.FindElementByXPath(donoId).SendKeys "CGL"
+        ElseIf ws.Cells(i, 9).Value = "TERCEIROS" Then
+            donoId = "(//input[@id='DonoMercadoria0_" & notaIndex & "'])[1]"
+            driver.FindElementByXPath(donoId).SendKeys "LDC"
+        End If
+
+        driver.Wait 2300
+        Application.SendKeys "~"
+        driver.Wait 500
+    Else
+        Exit For
+    End If
+Next notaIndex
+
+' Finalizar a ficha
+driver.FindElementByXPath("(//i[@class='fa fa-save'])[1]").Click
+driver.Wait 8000
+
+' Atualizar a página
+driver.Refresh
+driver.Wait 4000
+
+End If
+Next i
+Loop
+    
+' Fechar o navegador
+driver.Quit
+End Sub
