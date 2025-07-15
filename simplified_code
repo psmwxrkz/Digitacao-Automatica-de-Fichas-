@@ -151,7 +151,7 @@ Sub AutomateDataEntry()
 Dim notaIndex As Integer
 Dim xpathPrefix As String, cfopId As String, donoId As String
 
-For notaIndex = 3 To 7
+For notaIndex = 3 To 8
     If ws.Cells(i + 1, 1).Value = currentVagao Then
         i = i + 1
         driver.FindElementById("addNotaFiscal_0").Click
@@ -182,11 +182,10 @@ For notaIndex = 3 To 7
         driver.FindElementByXPath("(//input[@name='NotaFiscalOrigem[0].NotaFiscal[" & notaIndex & "].ValorTotalAux'])[1]").SendKeys "5000"
         driver.Wait 1500
 
+        donoId = "(//input[@id='DonoMercadoria0_" & notaIndex & "'])[1]"
         If ws.Cells(i, 9).Value = "TRANSFERÊNCIA" Or ws.Cells(i, 9).Value = "TRANSFERENCIA" Then
-            donoId = "(//input[@id='DonoMercadoria0_" & notaIndex & "'])[1]"
             driver.FindElementByXPath(donoId).SendKeys "CGL"
         ElseIf ws.Cells(i, 9).Value = "TERCEIROS" Then
-            donoId = "(//input[@id='DonoMercadoria0_" & notaIndex & "'])[1]"
             driver.FindElementByXPath(donoId).SendKeys "LDC"
         End If
 
