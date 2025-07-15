@@ -1,4 +1,4 @@
-Sub AutomateDataEntry()
+Sub automatingrds()
     Dim driver As Object
     Dim ws As Worksheet
     Dim lastRow As Long
