@@ -112,6 +112,7 @@ Sub automatingrds()
             driver.Wait 6000
             Application.SendKeys "~"
             driver.Wait 1650
+' Input da primeira NFE.
             ' Coluna G "Mercadoria"
             driver.FindElementById("ListProduto0_2_").SendKeys ws.Cells(i, 7).Value
             driver.Wait 1000
@@ -147,7 +148,7 @@ Sub automatingrds()
             driver.Wait 2300
             Application.SendKeys "~"
             driver.Wait 1000
-            
+    ' Cadastro da segunda nota (cadastra até 8 nfes).
 Dim notaIndex As Integer
 Dim xpathPrefix As String, cfopId As String, donoId As String
 
